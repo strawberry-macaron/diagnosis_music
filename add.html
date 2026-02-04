@@ -140,36 +140,21 @@ async function saveSong() {
     return;
   }
 
-  const data = {
-    title,
-    artist,
-    youtube,
-    cp,
-    reason,
-    tags
-  };
+  const data = { title, artist, youtube, cp, reason, tags };
 
   const GAS_URL =
-    "https://script.google.com/macros/s/AKfycbw1ne4znbALvO9B48IceXF5K7DHisruv3bMdwY8RUJIrWUGjW24J6_Atpm1IIiChCoY/exec";
+    "https://script.google.com/macros/s/AKfycbwbSYxIdHrl3ig89RPgfjFBzcJo2U8PZ7h2GPXfJcQhek6t0wVvYs5R7GIV4PffTc2U/exec";
 
   try {
-    const res = await fetch(GAS_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(data)
-});
+    await fetch(GAS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
 
-
-    const json = await res.json();
-
-    if (json.status === "ok") {
-      alert("スプレッドシートに追加しました！");
-      location.href = "list.html";
-    } else {
-      alert("追加に失敗しました");
-    }
+    alert("追加できました");
+    location.href = "list.html";
 
   } catch (err) {
     console.error(err);
@@ -177,8 +162,9 @@ async function saveSong() {
   }
 }
 
+
 </script>
 
 
 </body>
-</html>
+</html>await
