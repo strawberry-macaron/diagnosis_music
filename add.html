@@ -125,7 +125,7 @@ if (!localStorage.getItem("imesonSongs")) {
   localStorage.setItem("imesonSongs", JSON.stringify([]));
 }
 
-function saveSong() {
+async function saveSong() {
   const title = document.getElementById("title").value.trim();
   const artist = document.getElementById("artist").value.trim();
   const youtube = document.getElementById("youtube").value.trim();
@@ -135,30 +135,48 @@ function saveSong() {
   const tags = [...document.querySelectorAll('.tags input:checked')]
     .map(t => t.value);
 
-  if (!title || !artist || !youtube || !cp) {
-    alert("未入力の項目があります");
+  if (!title || !artist || !youtube) {
+    alert("必須項目が未入力です");
     return;
   }
 
-  // ① 既存データを取り出す
-  const songs = JSON.parse(localStorage.getItem("imesonSongs"));
-
-  // ② 新しい曲を追加
-  songs.push({
+  const data = {
     title,
     artist,
     youtube,
     cp,
     reason,
     tags
-  });
+  };
 
-  // ③ 保存する
-  localStorage.setItem("imesonSongs", JSON.stringify(songs));
+  const GAS_URL =
+    "https://script.google.com/macros/s/AKfycbw1ne4znbALvO9B48IceXF5K7DHisruv3bMdwY8RUJIrWUGjW24J6_Atpm1IIiChCoY/exec";
 
-  alert("保存されました！");
-  location.href = "list.html";
+  try {
+    const res = await fetch(GAS_URL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(data)
+});
+
+
+    const json = await res.json();
+
+    if (json.status === "ok") {
+      alert("スプレッドシートに追加しました！");
+      location.href = "list.html";
+    } else {
+      alert("追加に失敗しました");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("通信エラーが発生しました");
+  }
 }
+
 </script>
 
 

@@ -49,20 +49,14 @@ input, select {
   margin-right: 5px;
 }
 
+.tag {
+  cursor: pointer;
+}
+
 a {
   color: #9b8cff;
   text-decoration: none;
 }
-
-.tag {
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.tag:hover {
-  opacity: 0.7;
-}
-
 </style>
 </head>
 
@@ -78,57 +72,56 @@ a {
       <option value="heavy">重い</option>
       <option value="sad">切ない</option>
       <option value="crazy">狂気</option>
-      <option value="childhood">幼なじみ</option>
-      <option value="rival">宿敵</option>
-      <option value="master">主従</option>
-      <option value="codependent">共依存</option>
       <option value="happy">ハッピーエンド</option>
       <option value="merrybad">メリーバッド</option>
       <option value="badend">バッドエンド</option>
     </select>
   </div>
 
-  <div id="list"></div>
+  <div id="list">読み込み中...</div>
 
   <p style="text-align:center">
     <a href="index.html">← ホームに戻る</a>
   </p>
 </div>
 
-
 <script>
+const SPREADSHEET_ID = "1QfGEp_HR_SMv2SKofPrPbyl0BfGslCUdAKIr3DFqZo0";
+const URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+
+
 const listEl = document.getElementById("list");
 const cpInput = document.getElementById("searchCP");
 const tagSelect = document.getElementById("searchTag");
 
-const TAG_LABELS = {
-  sweet: "甘い",
-  heavy: "重い",
-  sad: "切ない",
-  crazy: "狂気",
-  childhood: "幼なじみ",
-  rival: "宿敵",
-  master: "主従",
-  codependent: "共依存",
-  happy: "ハッピーエンド",
-  merrybad: "メリーバッド",
-  badend: "バッドエンド"
-};
+let allSongs = [];
 
-function loadSongs() {
-  return JSON.parse(localStorage.getItem("imesonSongs") || "[]");
+// Google Sheets から読み込み
+async function loadSongs() {
+  const res = await fetch(URL);
+  const text = await res.text();
+  const json = JSON.parse(text.substring(47).slice(0, -2));
+  const rows = json.table.rows;
+
+  return rows.map(r => ({
+    title: r.c[0]?.v || "",
+    artist: r.c[1]?.v || "",
+    youtube: r.c[2]?.v || "",
+    cp: r.c[3]?.v || "",
+    tags: r.c[4]?.v ? r.c[4].v.split(",") : [],
+    reason: r.c[5]?.v || ""
+  }));
 }
 
 function render() {
-  const songs = loadSongs();
   const cp = cpInput.value.trim();
   const tag = tagSelect.value;
 
   listEl.innerHTML = "";
 
-  const filtered = songs.filter(s => {
+  const filtered = allSongs.filter(s => {
     if (cp && !s.cp.includes(cp)) return false;
-    if (tag && (!Array.isArray(s.tags) || !s.tags.includes(tag))) return false;
+    if (tag && !s.tags.includes(tag)) return false;
     return true;
   });
 
@@ -137,41 +130,30 @@ function render() {
     return;
   }
 
-  for (const s of filtered) {
-    const tagsHtml = Array.isArray(s.tags)
-      ? s.tags.map(t =>
-          `<span class="tag" data-tag="${t}">${TAG_LABELS[t] || t}</span>`
-        ).join("")
-      : "";
-
+  filtered.forEach(s => {
     listEl.innerHTML += `
       <div class="song">
         <strong>${s.title}</strong> / ${s.artist}<br>
         CP：${s.cp}<br>
         <a href="${s.youtube}" target="_blank">YouTubeで聴く</a>
-        <p>${s.reason || ""}</p>
-        <div class="tags">${tagsHtml}</div>
+        <p>${s.reason}</p>
+        <div class="tags">
+          ${s.tags.map(t => `<span class="tag">${t}</span>`).join("")}
+        </div>
       </div>
     `;
-  }
-
-  // タグクリック検索
-  document.querySelectorAll(".tag").forEach(el => {
-    el.addEventListener("click", () => {
-      tagSelect.value = el.dataset.tag;
-      render();
-    });
   });
 }
 
-// 検索イベント
+// 初期化
+(async () => {
+  allSongs = await loadSongs();
+  render();
+})();
+
 cpInput.addEventListener("input", render);
 tagSelect.addEventListener("change", render);
-
-// 初回表示
-render();
 </script>
-
 
 </body>
 </html>
