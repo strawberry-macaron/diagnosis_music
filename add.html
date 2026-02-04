@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>イメソンを追加</title>
+
+<style>
+body {
+  background: #1b1630;
+  color: #fff;
+  font-family: sans-serif;
+  padding: 30px;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: none;
+}
+
+textarea {
+  height: 80px;
+}
+
+button {
+  margin-top: 25px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 16px;
+  background: #9b8cff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.back {
+  display: block;
+  margin-top: 20px;
+  text-align: center;
+  color: #ccc;
+  text-decoration: none;
+}
+.tags {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.tags label {
+  font-size: 13px;
+  background: rgba(255,255,255,0.1);
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h2>イメソンを追加する</h2>
+
+ <label>曲名</label>
+<input id="title" type="text" placeholder="例：○○○">
+
+<label>アーティスト名</label>
+<input id="artist" type="text" placeholder="例：△△△">
+
+<label>YouTubeリンク</label>
+<input id="youtube" type="url" placeholder="https://www.youtube.com/watch?v=...">
+
+<label>CP名</label>
+<input id="cp" type="text" placeholder="例：A×B / ○○×△△">
+
+<label>この曲をイメソンに選んだ理由</label>
+<textarea id="reason" placeholder="このCPのどんな関係・感情に合うか"></textarea>
+
+  <label>タグ（当てはまるものを選んでください）</label>
+
+<div class="tags">
+  <label><input type="checkbox" value="sweet"> 甘い</label>
+  <label><input type="checkbox" value="heavy"> 重い</label>
+  <label><input type="checkbox" value="sad"> 切ない</label>
+  <label><input type="checkbox" value="crazy"> 狂気</label>
+
+  <label><input type="checkbox" value="childhood"> 幼なじみ</label>
+  <label><input type="checkbox" value="rival"> 宿敵</label>
+  <label><input type="checkbox" value="master"> 主従</label>
+  <label><input type="checkbox" value="codependent"> 共依存</label>
+
+  <label><input type="checkbox" value="happy"> ハッピーエンド</label>
+  <label><input type="checkbox" value="merrybad"> メリーバッド</label>
+  <label><input type="checkbox" value="badend"> バッドエンド</label>
+</div>
+
+  <button onclick="saveSong()">追加する</button>
+
+  <a class="back" href="index.html">← ホームに戻る</a>
+</div>
+
+<script>
+// 初期化（最初の1回だけ自動で作られる）
+if (!localStorage.getItem("imesonSongs")) {
+  localStorage.setItem("imesonSongs", JSON.stringify([]));
+}
+
+function saveSong() {
+  const title = document.getElementById("title").value.trim();
+  const artist = document.getElementById("artist").value.trim();
+  const youtube = document.getElementById("youtube").value.trim();
+  const cp = document.getElementById("cp").value.trim();
+  const reason = document.getElementById("reason").value.trim();
+
+  const tags = [...document.querySelectorAll('.tags input:checked')]
+    .map(t => t.value);
+
+  if (!title || !artist || !youtube || !cp) {
+    alert("未入力の項目があります");
+    return;
+  }
+
+  // ① 既存データを取り出す
+  const songs = JSON.parse(localStorage.getItem("imesonSongs"));
+
+  // ② 新しい曲を追加
+  songs.push({
+    title,
+    artist,
+    youtube,
+    cp,
+    reason,
+    tags
+  });
+
+  // ③ 保存する
+  localStorage.setItem("imesonSongs", JSON.stringify(songs));
+
+  alert("保存されました！");
+  location.href = "list.html";
+}
+</script>
+
+
+</body>
+</html>

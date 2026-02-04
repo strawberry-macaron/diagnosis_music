@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>イメソン一覧</title>
+
+<style>
+body {
+  background: #1b1630;
+  color: #fff;
+  font-family: sans-serif;
+  padding: 20px;
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+}
+
+h2 {
+  text-align: center;
+}
+
+.search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+input, select {
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  flex: 1;
+}
+
+.song {
+  background: rgba(255,255,255,0.1);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.tags span {
+  font-size: 12px;
+  background: #9b8cff;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-right: 5px;
+}
+
+a {
+  color: #9b8cff;
+  text-decoration: none;
+}
+
+.tag {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.tag:hover {
+  opacity: 0.7;
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h2>イメソン一覧</h2>
+
+  <div class="search">
+    <input id="searchCP" placeholder="CP名で検索（例：A×B）">
+    <select id="searchTag">
+      <option value="">タグを選択</option>
+      <option value="sweet">甘い</option>
+      <option value="heavy">重い</option>
+      <option value="sad">切ない</option>
+      <option value="crazy">狂気</option>
+      <option value="childhood">幼なじみ</option>
+      <option value="rival">宿敵</option>
+      <option value="master">主従</option>
+      <option value="codependent">共依存</option>
+      <option value="happy">ハッピーエンド</option>
+      <option value="merrybad">メリーバッド</option>
+      <option value="badend">バッドエンド</option>
+    </select>
+  </div>
+
+  <div id="list"></div>
+
+  <p style="text-align:center">
+    <a href="index.html">← ホームに戻る</a>
+  </p>
+</div>
+
+
+<script>
+const listEl = document.getElementById("list");
+const cpInput = document.getElementById("searchCP");
+const tagSelect = document.getElementById("searchTag");
+
+const TAG_LABELS = {
+  sweet: "甘い",
+  heavy: "重い",
+  sad: "切ない",
+  crazy: "狂気",
+  childhood: "幼なじみ",
+  rival: "宿敵",
+  master: "主従",
+  codependent: "共依存",
+  happy: "ハッピーエンド",
+  merrybad: "メリーバッド",
+  badend: "バッドエンド"
+};
+
+function loadSongs() {
+  return JSON.parse(localStorage.getItem("imesonSongs") || "[]");
+}
+
+function render() {
+  const songs = loadSongs();
+  const cp = cpInput.value.trim();
+  const tag = tagSelect.value;
+
+  listEl.innerHTML = "";
+
+  const filtered = songs.filter(s => {
+    if (cp && !s.cp.includes(cp)) return false;
+    if (tag && (!Array.isArray(s.tags) || !s.tags.includes(tag))) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = "<p>該当する曲がありません</p>";
+    return;
+  }
+
+  for (const s of filtered) {
+    const tagsHtml = Array.isArray(s.tags)
+      ? s.tags.map(t =>
+          `<span class="tag" data-tag="${t}">${TAG_LABELS[t] || t}</span>`
+        ).join("")
+      : "";
+
+    listEl.innerHTML += `
+      <div class="song">
+        <strong>${s.title}</strong> / ${s.artist}<br>
+        CP：${s.cp}<br>
+        <a href="${s.youtube}" target="_blank">YouTubeで聴く</a>
+        <p>${s.reason || ""}</p>
+        <div class="tags">${tagsHtml}</div>
+      </div>
+    `;
+  }
+
+  // タグクリック検索
+  document.querySelectorAll(".tag").forEach(el => {
+    el.addEventListener("click", () => {
+      tagSelect.value = el.dataset.tag;
+      render();
+    });
+  });
+}
+
+// 検索イベント
+cpInput.addEventListener("input", render);
+tagSelect.addEventListener("change", render);
+
+// 初回表示
+render();
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>イメソン診断</title>
+
+<style>
+body {
+  background: #1b1630;
+  color: #fff;
+  font-family: sans-serif;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+}
+
+h2 {
+  text-align: center;
+}
+
+.question {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.question p {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+button {
+  padding: 12px;
+  border-radius: 999px;
+  border: none;
+  background: #9b8cff;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+button.sub {
+  background: rgba(255,255,255,0.15);
+}
+
+.result {
+  margin-top: 40px;
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h2>イメソン診断</h2>
+
+  <div id="app"></div>
+<p style="text-align:center; margin-top:40px">
+  <a href="index.html" style="color:#9b8cff; text-decoration:none;">
+    ← ホームに戻る
+  </a>
+</p>
+</div>
+
+<script>
+// ===============================
+// 曲・タグの前提（list.html と共通）
+// ===============================
+const TAG_LABELS = {
+  sweet: "甘い",
+  heavy: "重い",
+  sad: "切ない",
+  crazy: "狂気",
+  childhood: "幼なじみ",
+  rival: "宿敵",
+  master: "主従",
+  codependent: "共依存",
+  happy: "ハッピーエンド",
+  merrybad: "メリーバッド",
+  badend: "バッドエンド"
+};
+
+// ===============================
+// 質問データ
+// ===============================
+const questions = [
+  {
+    text: "このCPの雰囲気はどちらに近いですか？",
+    options: [
+      { label: "明るめ・救いがある", tags: ["sweet", "happy"] },
+      { label: "暗め・重たい", tags: ["heavy", "sad"] },
+      { label: "どちらとも言えない", tags: ["sad"] }
+    ]
+  },
+  {
+    text: "二人の関係は安心できますか？",
+    options: [
+      { label: "はい", tags: ["sweet"] },
+      { label: "いいえ", tags: ["heavy", "crazy"] }
+    ]
+  },
+  {
+    text: "この関係は壊れやすいと思いますか？",
+    options: [
+      { label: "はい", tags: ["sad", "badend"] },
+      { label: "いいえ", tags: ["happy"] }
+    ]
+  },
+  {
+    text: "あなたが見たい結末は？",
+    options: [
+      { label: "幸せになってほしい", tags: ["happy"] },
+      { label: "苦しいけど美しい終わり", tags: ["merrybad"] },
+      { label: "破滅まで含めて好き", tags: ["badend"] }
+    ]
+  }
+];
+
+// ===============================
+// 診断ロジック
+// ===============================
+let current = 0;
+let score = {};
+
+function addTags(tags) {
+  tags.forEach(t => {
+    score[t] = (score[t] || 0) + 1;
+  });
+}
+
+function next(tags) {
+  addTags(tags);
+  current++;
+  render();
+}
+
+// ===============================
+// 描画
+// ===============================
+const app = document.getElementById("app");
+
+function render() {
+  app.innerHTML = "";
+
+  if (current < questions.length) {
+    const q = questions[current];
+    app.innerHTML = `
+      <div class="question">
+        <p>${q.text}</p>
+        <div class="buttons">
+          ${q.options.map(o =>
+            `<button onclick='next(${JSON.stringify(o.tags)})'>${o.label}</button>`
+          ).join("")}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  showResult();
+}
+
+// ===============================
+// 結果表示
+// ===============================
+function showResult() {
+  const sortedTags = Object.keys(score)
+    .sort((a,b) => score[b] - score[a]);
+
+  const topTags = sortedTags.slice(0, 3);
+
+  app.innerHTML = `
+    <div class="result">
+      <p>あなたのCPに近いイメージ</p>
+      <p>
+        ${topTags.map(t => `#${TAG_LABELS[t]}`).join(" ")}
+      </p>
+
+      <p style="margin-top:30px">
+        CP名（任意）
+        <br><small>※空欄でもOK</small>
+      </p>
+      <input id="cpInput" placeholder="例：A×B">
+
+      <div class="buttons" style="margin-top:20px">
+        <button onclick="goList()">イメソン一覧を見る</button>
+      </div>
+    </div>
+  `;
+}
+
+// ===============================
+// list.html へ移動
+// ===============================
+function goList() {
+  const cp = document.getElementById("cpInput").value.trim();
+
+  localStorage.setItem(
+    "diagnosisTags",
+    JSON.stringify(Object.keys(score).sort((a,b) => score[b] - score[a]))
+  );
+
+  if (cp) {
+    localStorage.setItem("diagnosisCP", cp);
+  } else {
+    localStorage.removeItem("diagnosisCP");
+  }
+
+  location.href = "list.html";
+}
+
+// 初回描画
+render();
+</script>
+
+</body>
+</html>
